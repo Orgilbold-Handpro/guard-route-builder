@@ -273,7 +273,7 @@ const PatrolDesigner = () => {
           <div className="flex items-center gap-3">
             <Button onClick={addPosition}>Байрлал нэмэх</Button>
             <Button variant="outline" onClick={() => setPositions([emptyPosition()])}>Шинэ эхлэх</Button>
-            <Button className="ml-auto" onClick={handleSave}>Хадгалах</Button>
+            <Button className="ml-auto" variant="accent" onClick={handleSave}>Хадгалах</Button>
           </div>
         </section>
 
