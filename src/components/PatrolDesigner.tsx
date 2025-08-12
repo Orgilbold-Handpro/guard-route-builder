@@ -13,9 +13,6 @@ export type PatrolPoint = {
   desc?: string;
   lat: number | "";
   lng: number | "";
-  userId?: string;
-  pictureDesc?: string;
-  picture?: string;
 };
 
 export type PatrolPosition = {
@@ -32,7 +29,7 @@ const toNumber = (v: string): number | "" => {
   return Number.isFinite(n) ? n : "";
 };
 
-const emptyPoint = (): PatrolPoint => ({ name: "", desc: "", lat: "", lng: "", userId: "", pictureDesc: "", picture: "" });
+const emptyPoint = (): PatrolPoint => ({ name: "", desc: "", lat: "", lng: "" });
 const emptyPosition = (): PatrolPosition => ({ name: "", desc: "", lat: "", lng: "", points: [] });
 
 const PatrolDesigner = () => {
@@ -183,30 +180,6 @@ const PatrolDesigner = () => {
                               onChange={(e) => updatePoint(idx, pi, "lng", toNumber(e.target.value))}
                             />
                           </div>
-                          <div className="space-y-2">
-                            <Label>Хэрэглэгч ID (userId)</Label>
-                            <Input
-                              placeholder="Ж: 66b9c93be2f4a2c4f3a1d222"
-                              value={pt.userId ?? ""}
-                              onChange={(e) => updatePoint(idx, pi, "userId", e.target.value)}
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label>Зургийн тайлбар (pictureDesc)</Label>
-                            <Input
-                              placeholder="Ж: Rust on mount / Window crack"
-                              value={pt.pictureDesc ?? ""}
-                              onChange={(e) => updatePoint(idx, pi, "pictureDesc", e.target.value)}
-                            />
-                          </div>
-                          <div className="md:col-span-2 space-y-2">
-                            <Label>Зургийн холбоос (picture URL)</Label>
-                            <Input
-                              placeholder="https://cdn.example.com/patrol/cam01.jpg"
-                              value={pt.picture ?? ""}
-                              onChange={(e) => updatePoint(idx, pi, "picture", e.target.value)}
-                            />
-                          </div>
                         </div>
                         <div className="flex justify-end mt-4">
                           <Button variant="destructive" size="sm" onClick={() => removePoint(idx, pi)}>
@@ -258,28 +231,14 @@ const PatrolDesigner = () => {
                           <div className="mt-3 space-y-3">
                             {p.points.map((pt, pi) => (
                               <div key={pi} className="rounded border bg-card p-3">
-                                <div className="flex items-start gap-3">
-                                  {pt.picture ? (
-                                    <img
-                                      src={pt.picture}
-                                      alt={`${p.name || `Байрлал #${i + 1}`} - ${pt.name || `Цэг #${pi + 1}`}`}
-                                      className="h-14 w-20 rounded object-cover"
-                                      loading="lazy"
-                                    />
+                                <div className="text-sm font-medium">{pt.name || `Цэг #${pi + 1}`}</div>
+                                <div className="text-xs text-muted-foreground">{pt.desc}</div>
+                                <div className="mt-1 text-xs text-muted-foreground">
+                                  {(typeof pt.lat === "number" && typeof pt.lng === "number") ? (
+                                    <span>Коорд: {pt.lat}, {pt.lng}</span>
                                   ) : (
-                                    <div className="h-14 w-20 rounded bg-muted" />
+                                    <span>Коорд оруулаагүй</span>
                                   )}
-                                  <div className="flex-1">
-                                    <div className="text-sm font-medium">{pt.name || `Цэг #${pi + 1}`}</div>
-                                    <div className="text-xs text-muted-foreground">{pt.desc || pt.pictureDesc}</div>
-                                    <div className="mt-1 text-xs text-muted-foreground">
-                                      {(typeof pt.lat === "number" && typeof pt.lng === "number") ? (
-                                        <span>Коорд: {pt.lat}, {pt.lng}</span>
-                                      ) : (
-                                        <span>Коорд оруулаагүй</span>
-                                      )}
-                                    </div>
-                                  </div>
                                 </div>
                               </div>
                             ))}
