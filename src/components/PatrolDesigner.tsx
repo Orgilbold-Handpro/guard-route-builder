@@ -112,7 +112,7 @@ const PatrolDesigner = () => {
   return (
     <main className="container mx-auto px-4 py-8">
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold">Эргүүл цэг төлөвлөгөө үүсгэгч</h1>
+        <h1 className="text-2xl font-semibold">Эргүүлийн цэг нэмэх</h1>
         <p className="text-muted-foreground mt-1 text-sm">
           Систем доторх менежерийн хэсэгт ашиглах байрлал, дэд цэгүүдээ үүсгээд баруун талд урьдчилсан харагдацыг шалгаарай.
         </p>
@@ -135,7 +135,9 @@ const PatrolDesigner = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <section className="space-y-4">
+        <section>
+          <ScrollArea className="h-[560px] pr-4">
+            <div className="space-y-4">
           {positions.map((pos, idx) => (
             <Card key={idx} className="">
               <CardHeader className="flex flex-row items-center justify-between gap-4">
@@ -271,10 +273,12 @@ const PatrolDesigner = () => {
           ))}
 
           <div className="flex items-center gap-3">
-            <Button onClick={addPosition}>Байрлал нэмэх</Button>
+            <Button variant="secondary" onClick={addPosition}>Байрлал нэмэх</Button>
             <Button variant="outline" onClick={() => setPositions([emptyPosition()])}>Шинэ эхлэх</Button>
-            <Button className="ml-auto" variant="accent" onClick={handleSave}>Хадгалах</Button>
+            <Button className="ml-auto" variant="success" onClick={handleSave}>Хадгалах</Button>
           </div>
+        </div>
+          </ScrollArea>
         </section>
 
         <aside className="space-y-4">
