@@ -333,16 +333,6 @@ const PatrolDesigner = () => {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Жишээ</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                Ж: “А байр” дотор “1-р орц”, “2-р орц”, “Граж” гэх мэт дэд цэгүүдийг нэмнэ.
-              </p>
-            </CardContent>
-          </Card>
         </aside>
       </div>
 
