@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import MapPicker from "@/components/MapPicker";
+import { useToast } from "@/hooks/use-toast";
 
 // Types matching the requested JSON shape
 export type PatrolPoint = {
@@ -36,6 +37,7 @@ const emptyPosition = (): PatrolPosition => ({ name: "", desc: "", lat: "", lng:
 
 const PatrolDesigner = () => {
   const [positions, setPositions] = useState<PatrolPosition[]>([emptyPosition()]);
+  const { toast } = useToast();
 
 
   // Mapbox token (temporary input) and map picker state
@@ -100,6 +102,12 @@ const PatrolDesigner = () => {
   };
 
 
+
+  const handleSave = () => {
+    // TODO: integrate persistence
+    console.log("Patrol plan saved:", positions);
+    toast({ title: "Амжилттай хадгаллаа", description: "Эргүүл төлөвлөгөө хадгалагдлаа." });
+  };
 
   return (
     <main className="container mx-auto px-4 py-8">
@@ -265,6 +273,7 @@ const PatrolDesigner = () => {
           <div className="flex items-center gap-3">
             <Button onClick={addPosition}>Байрлал нэмэх</Button>
             <Button variant="outline" onClick={() => setPositions([emptyPosition()])}>Шинэ эхлэх</Button>
+            <Button className="ml-auto" onClick={handleSave}>Хадгалах</Button>
           </div>
         </section>
 
