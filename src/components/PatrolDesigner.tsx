@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -6,6 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import MapPicker from "@/components/MapPicker";
 
 // Types matching the requested JSON shape
 export type PatrolPoint = {
@@ -35,6 +37,32 @@ const emptyPosition = (): PatrolPosition => ({ name: "", desc: "", lat: "", lng:
 const PatrolDesigner = () => {
   const [positions, setPositions] = useState<PatrolPosition[]>([emptyPosition()]);
 
+
+  // Mapbox token (temporary input) and map picker state
+  const [mapboxToken, setMapboxToken] = useState("");
+  useEffect(() => {
+    const saved = localStorage.getItem("mapbox_token") || "";
+    setMapboxToken(saved);
+  }, []);
+  useEffect(() => {
+    localStorage.setItem("mapbox_token", mapboxToken || "");
+  }, [mapboxToken]);
+
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [pickerTarget, setPickerTarget] = useState<{
+    type: "position" | "point";
+    posIndex: number;
+    pointIndex?: number;
+  } | null>(null);
+
+  const openPickForPosition = (posIndex: number) => {
+    setPickerTarget({ type: "position", posIndex });
+    setPickerOpen(true);
+  };
+  const openPickForPoint = (posIndex: number, pointIndex: number) => {
+    setPickerTarget({ type: "point", posIndex, pointIndex });
+    setPickerOpen(true);
+  };
 
   const addPosition = () => setPositions((prev) => [...prev, emptyPosition()]);
   const removePosition = (index: number) =>
@@ -82,6 +110,22 @@ const PatrolDesigner = () => {
         </p>
       </div>
 
+      <div className="rounded-md border p-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+          <div className="md:col-span-2 space-y-2">
+            <Label>Mapbox public token</Label>
+            <Input
+              placeholder="pk.***"
+              value={mapboxToken}
+              onChange={(e) => setMapboxToken(e.target.value)}
+            />
+          </div>
+          <p className="text-xs text-muted-foreground md:col-span-1">
+            Token оруулснаар газрын зураг идэвхжинэ. Mapbox → Tokens хэсгээс public token авна.
+          </p>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <section className="space-y-4">
           {positions.map((pos, idx) => (
@@ -115,23 +159,35 @@ const PatrolDesigner = () => {
                       onChange={(e) => updatePosition(idx, "desc", e.target.value)}
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label>Өргөрөг (lat)</Label>
-                    <Input
-                      inputMode="decimal"
-                      placeholder="Ж: 47.918412"
-                      value={pos.lat}
-                      onChange={(e) => updatePosition(idx, "lat", toNumber(e.target.value))}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Уртраг (lng)</Label>
-                    <Input
-                      inputMode="decimal"
-                      placeholder="Ж: 106.917271"
-                      value={pos.lng}
-                      onChange={(e) => updatePosition(idx, "lng", toNumber(e.target.value))}
-                    />
+                  <div className="md:col-span-2">
+                    <Label>Координат</Label>
+                    <div className="mt-2 flex flex-wrap items-center gap-3">
+                      <div className="text-sm text-muted-foreground">
+                        {typeof pos.lat === "number" && typeof pos.lng === "number"
+                          ? `lat: ${pos.lat}, lng: ${pos.lng}`
+                          : "Сонгоогүй"}
+                      </div>
+                      <Button size="sm" onClick={() => openPickForPosition(idx)} disabled={!mapboxToken}>
+                        Газрын зураг дээр сонгох
+                      </Button>
+                      {(pos.lat !== "" || pos.lng !== "") && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            updatePosition(idx, "lat", "");
+                            updatePosition(idx, "lng", "");
+                          }}
+                        >
+                          Цэвэрлэх
+                        </Button>
+                      )}
+                    </div>
+                    {!mapboxToken && (
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Газрын зураг ажиллуулахын тулд Mapbox token оруулна уу.
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -162,23 +218,35 @@ const PatrolDesigner = () => {
                               onChange={(e) => updatePoint(idx, pi, "desc", e.target.value)}
                             />
                           </div>
-                          <div className="space-y-2">
-                            <Label>Өргөрөг (lat)</Label>
-                            <Input
-                              inputMode="decimal"
-                              placeholder="Ж: 47.918500"
-                              value={pt.lat}
-                              onChange={(e) => updatePoint(idx, pi, "lat", toNumber(e.target.value))}
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label>Уртраг (lng)</Label>
-                            <Input
-                              inputMode="decimal"
-                              placeholder="Ж: 106.917350"
-                              value={pt.lng}
-                              onChange={(e) => updatePoint(idx, pi, "lng", toNumber(e.target.value))}
-                            />
+                          <div className="md:col-span-2">
+                            <Label>Координат</Label>
+                            <div className="mt-2 flex flex-wrap items-center gap-3">
+                              <div className="text-sm text-muted-foreground">
+                                {typeof pt.lat === "number" && typeof pt.lng === "number"
+                                  ? `lat: ${pt.lat}, lng: ${pt.lng}`
+                                  : "Сонгоогүй"}
+                              </div>
+                              <Button size="sm" onClick={() => openPickForPoint(idx, pi)} disabled={!mapboxToken}>
+                                Газрын зураг дээр сонгох
+                              </Button>
+                              {(pt.lat !== "" || pt.lng !== "") && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    updatePoint(idx, pi, "lat", "");
+                                    updatePoint(idx, pi, "lng", "");
+                                  }}
+                                >
+                                  Цэвэрлэх
+                                </Button>
+                              )}
+                            </div>
+                            {!mapboxToken && (
+                              <p className="mt-1 text-xs text-muted-foreground">
+                                Газрын зураг ажиллуулахын тулд Mapbox token оруулна уу.
+                              </p>
+                            )}
                           </div>
                         </div>
                         <div className="flex justify-end mt-4">
@@ -264,6 +332,49 @@ const PatrolDesigner = () => {
           </Card>
         </aside>
       </div>
+
+      <Dialog open={pickerOpen} onOpenChange={setPickerOpen}>
+        <DialogContent className="sm:max-w-[720px]">
+          <DialogHeader>
+            <DialogTitle>Координат сонгох</DialogTitle>
+          </DialogHeader>
+
+          {!mapboxToken ? (
+            <p className="text-sm text-destructive">Mapbox token оруулна уу.</p>
+          ) : (
+            <MapPicker
+              token={mapboxToken}
+              value={
+                pickerTarget
+                  ? pickerTarget.type === "position"
+                    ? (typeof positions[pickerTarget.posIndex]?.lat === "number" &&
+                       typeof positions[pickerTarget.posIndex]?.lng === "number"
+                      ? { lat: positions[pickerTarget.posIndex].lat as number, lng: positions[pickerTarget.posIndex].lng as number }
+                      : undefined)
+                    : (typeof positions[pickerTarget.posIndex]?.points[pickerTarget.pointIndex!]?.lat === "number" &&
+                       typeof positions[pickerTarget.posIndex]?.points[pickerTarget.pointIndex!]?.lng === "number"
+                      ? { lat: positions[pickerTarget.posIndex].points[pickerTarget.pointIndex!].lat as number, lng: positions[pickerTarget.posIndex].points[pickerTarget.pointIndex!].lng as number }
+                      : undefined)
+                  : undefined
+              }
+              onChange={(c) => {
+                if (!pickerTarget) return;
+                if (pickerTarget.type === "position") {
+                  updatePosition(pickerTarget.posIndex, "lat", c.lat);
+                  updatePosition(pickerTarget.posIndex, "lng", c.lng);
+                } else {
+                  updatePoint(pickerTarget.posIndex, pickerTarget.pointIndex!, "lat", c.lat);
+                  updatePoint(pickerTarget.posIndex, pickerTarget.pointIndex!, "lng", c.lng);
+                }
+              }}
+            />
+          )}
+
+          <DialogFooter>
+            <Button variant="secondary" onClick={() => setPickerOpen(false)}>Хаах</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </main>
   );
 };
