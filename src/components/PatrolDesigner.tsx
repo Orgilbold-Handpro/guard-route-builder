@@ -1,11 +1,11 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
-import { toast } from "@/components/ui/use-toast";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 // Types matching the requested JSON shape
 export type PatrolPoint = {
@@ -38,24 +38,6 @@ const emptyPosition = (): PatrolPosition => ({ name: "", desc: "", lat: "", lng:
 const PatrolDesigner = () => {
   const [positions, setPositions] = useState<PatrolPosition[]>([emptyPosition()]);
 
-  const exportJson = useMemo(() => {
-    const cleaned = positions.map((p) => ({
-      name: p.name,
-      desc: p.desc,
-      lat: typeof p.lat === "number" ? p.lat : undefined,
-      lng: typeof p.lng === "number" ? p.lng : undefined,
-      points: p.points.map((pt) => ({
-        name: pt.name,
-        desc: pt.desc,
-        lat: typeof pt.lat === "number" ? pt.lat : undefined,
-        lng: typeof pt.lng === "number" ? pt.lng : undefined,
-        userId: pt.userId,
-        pictureDesc: pt.pictureDesc,
-        picture: pt.picture,
-      })),
-    }));
-    return JSON.stringify({ positions: cleaned }, null, 2);
-  }, [positions]);
 
   const addPosition = () => setPositions((prev) => [...prev, emptyPosition()]);
   const removePosition = (index: number) =>
@@ -92,33 +74,14 @@ const PatrolDesigner = () => {
     );
   };
 
-  const copyJson = async () => {
-    try {
-      await navigator.clipboard.writeText(exportJson);
-      toast({ description: "JSON амжилттай хууллаа." });
-    } catch (e) {
-      toast({ description: "Хуулах үед алдаа гарлаа.", });
-    }
-  };
 
-  const downloadJson = () => {
-    const blob = new Blob([exportJson], { type: "application/json;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "patrol-positions.json";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-  };
 
   return (
     <main className="container mx-auto px-4 py-8">
       <div className="mb-6">
         <h1 className="text-2xl font-semibold">Эргүүл цэг төлөвлөгөө үүсгэгч</h1>
         <p className="text-muted-foreground mt-1 text-sm">
-          Систем дотор ашиглах Patrol positions болон дэд цэгүүд (points)-ээ үүсгээд JSON-оор экспортлоно.
+          Систем доторх менежерийн хэсэгт ашиглах байрлал, дэд цэгүүдээ үүсгээд баруун талд урьдчилсан харагдацыг шалгаарай.
         </p>
       </div>
 
@@ -267,24 +230,76 @@ const PatrolDesigner = () => {
         <aside className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">JSON урьдчилсан харагдац</CardTitle>
+              <CardTitle className="text-base">Урьдчилсан харагдац</CardTitle>
             </CardHeader>
             <CardContent>
-              <Textarea value={exportJson} readOnly className="min-h-[520px] font-mono text-xs" />
-              <div className="flex gap-2 mt-4">
-                <Button onClick={copyJson}>JSON хуулж авах</Button>
-                <Button variant="secondary" onClick={downloadJson}>JSON татах</Button>
-              </div>
+              <ScrollArea className="h-[560px] pr-4">
+                {positions.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">Одоогоор байрлал алга.</p>
+                ) : (
+                  <div className="space-y-4">
+                    {positions.map((p, i) => (
+                      <div key={i} className="rounded-md border p-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="font-medium">{p.name || `Байрлал #${i + 1}`}</div>
+                            <div className="text-xs text-muted-foreground">{p.desc}</div>
+                          </div>
+                          <Badge variant="secondary">{p.points.length} цэг</Badge>
+                        </div>
+                        <div className="mt-2 text-xs text-muted-foreground">
+                          {(typeof p.lat === "number" && typeof p.lng === "number") ? (
+                            <span>Коорд: {p.lat}, {p.lng}</span>
+                          ) : (
+                            <span>Коорд оруулаагүй</span>
+                          )}
+                        </div>
+                        {p.points.length > 0 && (
+                          <div className="mt-3 space-y-3">
+                            {p.points.map((pt, pi) => (
+                              <div key={pi} className="rounded border bg-card p-3">
+                                <div className="flex items-start gap-3">
+                                  {pt.picture ? (
+                                    <img
+                                      src={pt.picture}
+                                      alt={`${p.name || `Байрлал #${i + 1}`} - ${pt.name || `Цэг #${pi + 1}`}`}
+                                      className="h-14 w-20 rounded object-cover"
+                                      loading="lazy"
+                                    />
+                                  ) : (
+                                    <div className="h-14 w-20 rounded bg-muted" />
+                                  )}
+                                  <div className="flex-1">
+                                    <div className="text-sm font-medium">{pt.name || `Цэг #${pi + 1}`}</div>
+                                    <div className="text-xs text-muted-foreground">{pt.desc || pt.pictureDesc}</div>
+                                    <div className="mt-1 text-xs text-muted-foreground">
+                                      {(typeof pt.lat === "number" && typeof pt.lng === "number") ? (
+                                        <span>Коорд: {pt.lat}, {pt.lng}</span>
+                                      ) : (
+                                        <span>Коорд оруулаагүй</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </ScrollArea>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Жишээ бүтэц</CardTitle>
+              <CardTitle className="text-base">Жишээ</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">
-                Ж: "А байр" дотор "1-р орц", "2-р орц", "Граж" гэх мэт дэд цэгүүдийг нэмнэ.
+                Ж: “А байр” дотор “1-р орц”, “2-р орц”, “Граж” гэх мэт дэд цэгүүдийг нэмнэ.
               </p>
             </CardContent>
           </Card>
